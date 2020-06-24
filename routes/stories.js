@@ -4,10 +4,20 @@ const router = express.Router();
 const { ensureAuth } = require('../middlewares/auth');
 const Story = require('../models/Story');
 
-// @desc Show add page
-// @route GET /stories/add
-router.get('/add', ensureAuth, (req, res) => {
-  res.render('stories/add');
+// @desc Show all stories
+// @route GET /stories
+router.get('/', ensureAuth, async (req, res) => {
+  try {
+    const stories = await Story.find({ status: 'public' })
+      .populate('user')
+      .sort({ createdAt: 'desc' })
+      .lean();
+
+    res.render('stories/index', { stories });
+  } catch (error) {
+    console.error(error);
+    res.render('errors/500');
+  }
 });
 
 // @desc Process add form
@@ -21,6 +31,12 @@ router.post('/', ensureAuth, async (req, res) => {
     console.error(error);
     res.render('errors/500');
   }
+});
+
+// @desc Show add page
+// @route GET /stories/add
+router.get('/add', ensureAuth, (req, res) => {
+  res.render('stories/add');
 });
 
 module.exports = router;
